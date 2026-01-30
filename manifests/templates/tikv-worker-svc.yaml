@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tikv-worker
+  namespace: ${NAMESPACE}
+spec:
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: worker
+    port: 19000
+    protocol: TCP
+    targetPort: 19000
+  selector:
+    app.kubernetes.io/component: tikv-worker
+  sessionAffinity: None
+  type: ClusterIP

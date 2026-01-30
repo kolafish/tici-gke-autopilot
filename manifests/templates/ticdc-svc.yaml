@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ticdc-peer
+  namespace: ${NAMESPACE}
+spec:
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: server
+    port: 8301
+    protocol: TCP
+    targetPort: 8301
+  selector:
+    app.kubernetes.io/component: ticdc
+    app.kubernetes.io/instance: ticdc
+  sessionAffinity: None
+  type: ClusterIP
+  clusterIP: None

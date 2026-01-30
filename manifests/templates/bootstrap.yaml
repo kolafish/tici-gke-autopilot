@@ -1,0 +1,73 @@
+apiVersion: v1
+data:
+  bootstrap-sql: |2-
+    REVOKE SHUTDOWN, CONFIG ON *.* FROM root;
+    CREATE USER IF NOT EXISTS platform_admin;
+    GRANT SYSTEM_VARIABLES_ADMIN ON *.* TO 'platform_admin'@'%';
+    GRANT RESTRICTED_VARIABLES_ADMIN ON *.* TO 'platform_admin'@'%';
+    GRANT RESTRICTED_TABLES_ADMIN ON *.* TO 'platform_admin'@'%';
+    GRANT RESTRICTED_USER_ADMIN ON *.* TO 'platform_admin'@'%';
+    GRANT RESTRICTED_AUDIT_ADMIN ON *.* TO 'platform_admin'@'%';
+    GRANT RELOAD ON *.* TO 'platform_admin'@'%';
+    GRANT SYSTEM_USER ON *.* TO 'platform_admin'@'%' WITH GRANT OPTION;
+
+
+    CREATE USER IF NOT EXISTS maintenance_admin;
+    GRANT SYSTEM_VARIABLES_ADMIN ON *.* TO 'maintenance_admin'@'%';
+    GRANT RESTRICTED_VARIABLES_ADMIN ON *.* TO 'maintenance_admin'@'%';
+    GRANT RESTRICTED_TABLES_ADMIN ON *.* TO 'maintenance_admin'@'%';
+    GRANT RESTRICTED_USER_ADMIN ON *.* TO 'maintenance_admin'@'%';
+    GRANT RELOAD ON *.* TO 'maintenance_admin'@'%';
+    GRANT SYSTEM_USER ON *.* TO 'maintenance_admin'@'%' WITH GRANT OPTION;
+    GRANT CONFIG ON *.* TO 'maintenance_admin'@'%';
+
+
+    CREATE USER IF NOT EXISTS cloud_admin;
+    CREATE USER IF NOT EXISTS role_admin;
+
+    GRANT DASHBOARD_CLIENT on *.* TO 'cloud_admin'@'%';
+    GRANT SYSTEM_VARIABLES_ADMIN ON *.* TO 'cloud_admin'@'%';
+    GRANT CONNECTION_ADMIN ON *.* TO 'cloud_admin'@'%';
+    GRANT RESTRICTED_VARIABLES_ADMIN ON *.* TO 'cloud_admin'@'%';
+    GRANT RESTRICTED_STATUS_ADMIN ON *.* TO 'cloud_admin'@'%';
+    GRANT RESTRICTED_CONNECTION_ADMIN ON *.* TO 'cloud_admin'@'%';
+    GRANT RESTRICTED_USER_ADMIN ON *.* TO 'cloud_admin'@'%';
+    GRANT RESTRICTED_TABLES_ADMIN ON *.* TO 'cloud_admin'@'%';
+    GRANT RESTRICTED_REPLICA_WRITER_ADMIN ON *.* TO 'cloud_admin'@'%';
+    GRANT BACKUP_ADMIN, RESTORE_ADMIN ON *.* TO 'cloud_admin'@'%';
+    GRANT ROLE_ADMIN ON *.* to 'role_admin';
+    GRANT SYSTEM_USER ON *.* TO 'cloud_admin'@'%' WITH GRANT OPTION;
+
+    GRANT RELOAD ON *.* TO 'cloud_admin'@'%';
+    GRANT PROCESS ON *.* TO 'cloud_admin'@'%';
+    GRANT SHUTDOWN, CONFIG ON *.* TO 'cloud_admin'@'%';
+
+    GRANT CREATE USER, CREATE ROLE ON *.* TO 'cloud_admin'@'%';
+    GRANT SELECT, INSERT, UPDATE, DELETE ON mysql.* TO 'cloud_admin'@'%';
+    GRANT SELECT ON information_schema.* TO 'cloud_admin'@'%';
+    GRANT SELECT ON performance_schema.* TO 'cloud_admin'@'%';
+
+    GRANT SELECT ON *.* TO 'cloud_admin'@'%';
+    GRANT INDEX ON *.* TO 'cloud_admin'@'%';
+    GRANT INSERT ON *.* TO 'cloud_admin'@'%';
+    GRANT UPDATE ON *.* TO 'cloud_admin'@'%';
+    GRANT DELETE ON *.* TO 'cloud_admin'@'%';
+    GRANT CREATE ON *.* TO 'cloud_admin'@'%';
+    GRANT DROP ON *.* TO 'cloud_admin'@'%';
+    GRANT ALTER ON *.* TO 'cloud_admin'@'%';
+    GRANT CREATE VIEW ON *.* TO 'cloud_admin'@'%';
+    GRANT SHOW DATABASES on *.* TO 'cloud_admin'@'%';
+
+    GRANT REFERENCES ON *.* TO 'cloud_admin'@'%';
+
+
+    SET GLOBAL tidb_redact_log = 1;
+    SET GLOBAL tidb_analyze_version = 2;
+    SET GLOBAL tidb_runtime_filter_mode = LOCAL;
+
+
+    SET GLOBAL tidb_cloud_storage_uri = 's3://${S3_BUCKET}/global-sort?access-key=${S3_ACCESS_KEY}&secret-access-key=${S3_SECRET_KEY}&endpoint=${S3_ENDPOINT}';
+kind: ConfigMap
+metadata:
+  name: bootstrap-sql
+  namespace: ${NAMESPACE}

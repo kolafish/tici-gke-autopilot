@@ -1,0 +1,93 @@
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  annotations:
+  name: tikv
+  namespace: ${NAMESPACE}
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  enablePVReclaim: true
+  helper:
+    image: ${TIDB_HELPER_IMAGE}
+  imagePullPolicy: IfNotPresent
+  multiAZ: false
+  cluster:
+    name: pd
+    namespace: ${NAMESPACE}
+  tikv:
+    annotations:
+      tidb.pingcap.com/sysctl-init: "true"
+      serverless.tidbcloud.com/tier: "standard"
+    autoScaling:
+      enabled: false
+    baseImage: ${TIKV_BASE_IMAGE}
+    canaryUpgrade:
+      enabled: false
+    config: |
+      [backup]
+      num-threads = 1
+      s3-multi-part-size = '30MB'
+    
+      [coprocessor]
+      enable-region-bucket = true
+      region-split-keys = 50000000
+      region-split-size = '500MiB'
+    
+      [kvengine]
+      dfs-load-concurrency-per-core = 32
+    
+      [raftstore]
+      raftdb-path = '/var/lib/tikv/raft'
+      store-max-batch-size = 1024
+    
+      [rfengine]
+      compact-wal-sync-concurrency = 4
+      lightweight-backup = true
+      wal-sync-dir = '/var/lib/tikv/raft/data'
+    
+      [security]
+      redact-info-log = true
+    
+      [server]
+      grpc-concurrency = 2
+      simplify-metrics = true
+      status-addr = '[::]:20180'
+    
+      [storage]
+      api-version = 2
+      data-dir = '/var/lib/tikv'
+      enable-ttl = true
+      low-space-threshold = '5%'
+    env:
+    - name: DFS_PREFIX
+      value: s0001
+    - name: DFS_S3_BUCKET
+      value: ${S3_BUCKET}
+    - name: DFS_S3_REGION
+      value: ${S3_REGION}
+    - name: DFS_S3_ENDPOINT
+      value: ${S3_ENDPOINT}
+    - name: MALLOC_CONF
+      value: prof:true,prof_active:true
+    - name: DFS_ALLOW_FALLBACK_LOCAL
+      value: "0"
+    - name: DFS_S3_KEY_ID
+      value: ${S3_ACCESS_KEY}
+    - name: DFS_S3_SECRET_KEY
+      value: ${S3_SECRET_KEY}
+    limits:
+      cpu: "2"
+      memory: "8Gi"
+    replicas: ${TIKV_REPLICAS}
+    requests:
+      storage: 100Gi
+      cpu: "1"
+      memory: "4Gi"
+    scaleInProtection:
+      enabled: false
+    scaleInProtectionForNode: false
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: ${STORAGE_CLASS}
+    version: ${TIKV_VERSION}

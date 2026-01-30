@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+  labels:
+    app: minio
+    component: object-storage
+  name: minio
+  namespace: ${NAMESPACE}
+spec:
+  ports:
+  - name: s3
+    port: 9000
+    protocol: TCP
+    targetPort: 9000
+  publishNotReadyAddresses: true
+  selector:
+    app: minio
+    component: object-storage
+  type: ClusterIP

@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+  name: tikv-worker
+  namespace: ${NAMESPACE}
+spec:
+  replicas: ${TIKV_WORKER_REPLICAS}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: tikv-worker
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "yes"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "19000"
+        prometheus.io/scrape: "true"
+      labels:
+        app.kubernetes.io/component: tikv-worker
+        app.kubernetes.io/name: tikv-worker
+    spec:
+      containers:
+      - command:
+        - /tikv-worker
+        - --pd-endpoints
+        - pd-pd.${NAMESPACE}.svc:2379
+        env:
+        - name: DFS_PREFIX
+          value: s0001
+        - name: DFS_S3_BUCKET
+          value: ${S3_BUCKET}
+        - name: DFS_S3_REGION
+          value: ${S3_REGION}
+        - name: DFS_S3_SECRET_KEY
+          value: ${S3_SECRET_KEY}
+        - name: DFS_S3_KEY_ID
+          value: ${S3_ACCESS_KEY}
+        - name: DFS_S3_ENDPOINT
+          value: ${S3_ENDPOINT}
+        - name: MALLOC_CONF
+          value: prof:true
+        image: ${TIKV_WORKER_IMAGE}
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz
+            port: 19000
+          initialDelaySeconds: 1
+          periodSeconds: 20
+          successThreshold: 1
+          timeoutSeconds: 2
+        name: tikv-worker
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz
+            port: 19000
+          initialDelaySeconds: 1
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: "1"
+            memory: 2Gi
+          requests:
+            cpu: "100m"
+            memory: 1Gi
+      dnsPolicy: ClusterFirst
+      serviceAccount: controller
+      serviceAccountName: controller

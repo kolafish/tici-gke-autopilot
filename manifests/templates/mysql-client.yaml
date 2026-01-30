@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-client
+  namespace: ${NAMESPACE}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mysql-client
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mysql-client
+    spec:
+      containers:
+      - command:
+        - sleep
+        - infinity
+        image: ${MYSQL_CLIENT_IMAGE}
+        imagePullPolicy: IfNotPresent
+        name: sleep
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      serviceAccount: controller
+      serviceAccountName: controller

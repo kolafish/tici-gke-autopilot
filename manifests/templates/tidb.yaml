@@ -1,0 +1,39 @@
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  annotations:
+  name: tidb 
+  namespace: ${NAMESPACE}
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  enablePVReclaim: true
+  helper:
+    image: ${TIDB_HELPER_IMAGE}
+  imagePullPolicy: IfNotPresent
+  multiAZ: false
+  cluster:
+    name: pd
+    namespace: ${NAMESPACE}
+  tidb:
+    annotations:
+      serverless.tidbcloud.com/tier: "standard"
+    baseImage: ${TIDB_BASE_IMAGE}
+    config: |
+      advertise-address = 'tidb-tidb-0.${NAMESPACE}.svc.cluster.local'
+      disaggregated-tiflash = true
+      graceful-wait-before-shutdown = 30
+      host = '::'
+      store = 'tikv'
+    limits:
+      cpu: "1"
+      memory: 2Gi
+    maxFailoverCount: 3
+    replicas: ${TIDB_REPLICAS}
+    requests:
+      cpu: "500m"
+      memory: 512Mi
+    service:
+      type: ClusterIP
+    version: ${TIDB_VERSION}

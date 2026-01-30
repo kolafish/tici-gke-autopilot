@@ -1,0 +1,179 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tiflash-cn
+  namespace: ${NAMESPACE}
+spec:
+  replicas: ${TIFLASH_CN_REPLICAS}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tiflash-cn
+  serviceName: tiflash-cn-peer
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tiflash-cn
+    spec:
+      containers:
+      - command:
+        - /tiflash/tiflash
+        - server
+        - --config-file
+        - /data0/config.toml
+        env:
+        - name: DFS_PREFIX
+          value: s0001
+        - name: DFS_S3_BUCKET
+          value: ${S3_BUCKET}
+        - name: DFS_S3_REGION
+          value: ${S3_REGION}
+        - name: DFS_S3_ENDPOINT
+          value: ${S3_ENDPOINT}
+        - name: DFS_S3_KEY_ID
+          value: ${S3_ACCESS_KEY}
+        - name: DFS_S3_SECRET_KEY
+          value: ${S3_SECRET_KEY}
+        - name: S3_ACCESS_KEY_ID
+          value: ${S3_ACCESS_KEY}
+        - name: S3_SECRET_ACCESS_KEY
+          value: ${S3_SECRET_KEY}
+        - name: CONTAINER_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: CAPACITY
+          value: "0"
+        - name: TZ
+          value: UTC
+        image: ${TIFLASH_IMAGE}
+        imagePullPolicy: IfNotPresent
+        name: tiflash
+        ports:
+        - containerPort: 3930
+          name: tiflash
+          protocol: TCP
+        - containerPort: 8234
+          name: metrics
+          protocol: TCP
+        resources:
+          limits:
+            cpu: "1"
+            memory: 8Gi
+          requests:
+            cpu: 100m
+            memory: 1Gi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /data0
+          name: data0
+      - command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+          touch /data0/logs/server.log
+          tail -n0 -F /data0/logs/server.log &
+          tail_pid=$!
+          trap "kill $tail_pid; wait $tail_pid" TERM INT
+          wait $tail_pid
+        image: ${BUSYBOX_IMAGE}
+        imagePullPolicy: IfNotPresent
+        name: serverlog
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /data0
+          name: data0
+      - command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+          touch /data0/logs/error.log
+          tail -n0 -F /data0/logs/error.log &
+          tail_pid=$!
+          trap "kill $tail_pid; wait $tail_pid" TERM INT
+          wait $tail_pid
+        image: ${BUSYBOX_IMAGE}
+        imagePullPolicy: IfNotPresent
+        name: errorlog
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /data0
+          name: data0
+      - command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+          touch /data0/logs/tici-reader.log
+          tail -n0 -F /data0/logs/tici-reader.log &
+          tail_pid=$!
+          trap "kill $tail_pid; wait $tail_pid" TERM INT
+          wait $tail_pid
+        image: ${BUSYBOX_IMAGE}
+        imagePullPolicy: IfNotPresent
+        name: ticilog
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /data0
+          name: data0
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - command:
+        - sh
+        - -c
+        - set -ex;ordinal=`echo ${POD_NAME} | awk -F- '{print $NF}'`;sed s/POD_NUM/${ordinal}/g
+          /etc/tiflash/config_templ.toml > /data0/config.toml;sed s/POD_NUM/${ordinal}/g
+          /etc/tiflash/proxy_templ.toml > /data0/proxy.toml
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        image: ${BUSYBOX_IMAGE}
+        imagePullPolicy: IfNotPresent
+        name: init
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /data0
+          name: data0
+        - mountPath: /etc/tiflash
+          name: config
+          readOnly: true
+      restartPolicy: Always
+      serviceAccount: controller
+      serviceAccountName: controller
+      terminationGracePeriodSeconds: 660
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: tiflash-cn-config
+        name: config
+  updateStrategy:
+    rollingUpdate:
+      partition: 0
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: data0
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 11Gi
+      storageClassName: ${STORAGE_CLASS}
+      volumeMode: Filesystem

@@ -1,0 +1,58 @@
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  annotations:
+  name: tidb-worker
+  namespace: ${NAMESPACE}
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  enablePVReclaim: true
+  helper:
+    image: ${TIDB_HELPER_IMAGE}
+  imagePullPolicy: IfNotPresent
+  multiAZ: false
+  cluster:
+    name: pd
+    namespace: ${NAMESPACE}
+  tidb:
+    annotations:
+      serverless.tidbcloud.com/tier: "standard"
+    baseImage: ${TIDB_BASE_IMAGE}
+    config: |
+      disaggregated-tiflash = true
+      graceful-wait-before-shutdown = 30
+      host = "::"
+      initialize-sql-file = "/etc/tidb-bootstrap/bootstrap.sql"
+      store = "tikv"
+      tikv-worker-url = "http://tikv-worker.${NAMESPACE}.svc.cluster.local:19000"
+
+      [instance]
+        tidb_service_scope = "dxf_service"
+
+      [log]
+        [log.file]
+          max-backups = 3
+    limits:
+      cpu: "1"
+      memory: 2Gi
+    maxFailoverCount: 3
+    replicas: ${TIDB_WORKER_REPLICAS}
+    requests:
+      cpu: "500m"
+      memory: 512Mi
+    service:
+      type: ClusterIP
+    additionalVolumeMounts:
+    - name: tidb-bootstrap
+      mountPath: /etc/tidb-bootstrap
+      readOnly: true
+    additionalVolumes:
+    - name: tidb-bootstrap
+      configMap:
+        name: bootstrap-sql
+        items:
+        - key: bootstrap-sql
+          path: bootstrap.sql
+    version: ${TIDB_VERSION}

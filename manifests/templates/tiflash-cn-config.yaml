@@ -1,0 +1,79 @@
+apiVersion: v1
+data:
+  config_templ.toml: |
+    max_memory_usage_for_all_queries = 0.95
+    tmp_path = '/data0/tmp'
+    
+    [flash]
+    disaggregated_mode = 'tiflash_compute'
+    service_addr = 'tiflash-cn-POD_NUM.tiflash-cn-peer.${NAMESPACE}.svc.cluster.local:3930'
+    
+    [flash.proxy]
+    config = '/data0/proxy.toml'
+    data-dir = '/data0/proxy'
+    addr = '0.0.0.0:20170'
+    advertise-addr = 'tiflash-cn-POD_NUM.tiflash-cn-peer.${NAMESPACE}.svc.cluster.local:20170'
+    advertise-status-addr = 'tiflash-cn-POD_NUM.tiflash-cn-peer.${NAMESPACE}.svc.cluster.local:20292'
+    
+    [logger]
+    errorlog = '/data0/logs/error.log'
+    level = 'INFO'
+    log = '/data0/logs/server.log'
+    
+    [raft]
+    pd_addr = 'http://pd-pd.${NAMESPACE}:2379'
+    
+    [status]
+    metrics_port = 8234
+    
+    [storage]
+    api_version = 2
+    
+    [storage.main]
+    dir = ['/data0/db']
+    
+    [storage.raft]
+    dir = ['/data0/kvstore']
+    
+    [storage.remote]
+    [storage.remote.cache]
+    capacity = 2147483648
+    dir = '/data0/db/remote_cache'
+    
+    [storage.s3]
+    bucket = '${S3_BUCKET}'
+    endpoint = '${S3_ENDPOINT}'
+    root = 'tiflash-root'
+    
+    [tici]
+    [tici.frag_reader]
+    local_data_path = '/data0/frag_local_data'
+    
+    [tici.reader_node]
+    port = 8520
+    heartbeat_interval = "0.5s"
+    
+    [tici.reader_node.logger]
+    filename = '/data0/logs/tici-reader.log'
+    
+    [tici.s3]
+    bucket = '${S3_BUCKET}'
+    endpoint = '${S3_ENDPOINT}'
+    prefix = 'tici'
+    region = '${S3_REGION}'
+    access_key = '${S3_ACCESS_KEY}'
+    secret_key = '${S3_SECRET_KEY}'
+    
+  proxy_templ.toml: |
+    log-level = 'info'
+    
+    [server]
+    status-addr = '0.0.0.0:20292'
+    
+    [storage]
+    api-version = 2
+    enable-ttl = true
+kind: ConfigMap
+metadata:
+  name: tiflash-cn-config
+  namespace: ${NAMESPACE}

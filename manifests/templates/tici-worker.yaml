@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/component: tici-worker
+    app.kubernetes.io/instance: tici-worker
+  name: tici-worker
+  namespace: ${NAMESPACE}
+spec:
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Delete
+    whenScaled: Delete
+  podManagementPolicy: OrderedReady
+  replicas: ${TICI_WORKER_REPLICAS}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: tici-worker
+      app.kubernetes.io/instance: tici-worker
+  serviceName: tici-worker-peer
+  template:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "yes"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8511"
+        prometheus.io/scrape: "true"
+      labels:
+        app.kubernetes.io/component: tici-worker
+        app.kubernetes.io/instance: tici-worker
+    spec:
+      containers:
+      - command:
+        - /bin/sh
+        - -c
+        - |
+          set -ex
+          sed "s/POD_NAME/${POD_NAME}/g" /etc/tici-worker/config.toml > /tmp/config.toml
+          cat /tmp/config.toml
+          exec /tici-server worker --config /tmp/config.toml --log-file=
+        env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: CLUSTER_NAME
+          value: db
+        - name: TZ
+          value: UTC
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        image: ${TICI_IMAGE}
+        imagePullPolicy: IfNotPresent
+        #imagePullPolicy: Always
+        name: tici-worker
+        readinessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          successThreshold: 1
+          tcpSocket:
+            port: 8511
+          timeoutSeconds: 3
+        resources:
+          limits:
+            cpu: "8"
+            memory: 8G
+          requests:
+            cpu: "1"
+            memory: 1G
+        securityContext:
+          allowPrivilegeEscalation: true
+          capabilities:
+            drop:
+            - NET_RAW
+          readOnlyRootFilesystem: false
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/tici-worker
+          name: config
+          readOnly: true
+        - mountPath: /tmp
+          name: tmp-volume
+        - mountPath: /var/lib/tici-worker
+          name: data
+      dnsPolicy: ClusterFirst
+      schedulerName: default-scheduler
+      serviceAccount: controller
+      serviceAccountName: controller
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: tici-worker-config
+        name: config
+      - emptyDir: {}
+        name: tmp-volume
+  updateStrategy:
+    rollingUpdate:
+      partition: 0
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: ${STORAGE_CLASS}
+      volumeMode: Filesystem

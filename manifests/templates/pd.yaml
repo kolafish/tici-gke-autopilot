@@ -1,0 +1,34 @@
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  annotations:
+  name: pd
+  namespace: ${NAMESPACE}
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  enablePVReclaim: true
+  helper:
+    image: ${TIDB_HELPER_IMAGE}
+  imagePullPolicy: IfNotPresent
+  multiAZ: false
+  pd:
+    baseImage: ${PD_BASE_IMAGE}
+    env:
+    - name: PD_ADDR
+      value: http://127.0.0.1:2379
+    limits:
+      cpu: "1"
+      memory: 4Gi
+    replicas: ${PD_REPLICAS}
+    requests:
+      cpu: "500m"
+      memory: 1Gi
+      storage: 10Gi
+    storageClassName: ${STORAGE_CLASS}
+    version: ${PD_VERSION}
+    config: |
+      [replication]
+        enable-placement-rules = true
+        max-replicas = 1

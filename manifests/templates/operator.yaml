@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+  name: tidb-operator-controller-manager
+  namespace: ${NAMESPACE}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: controller-manager
+      app.kubernetes.io/instance: tidb-operator
+      app.kubernetes.io/name: tidb-operator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: controller-manager
+        app.kubernetes.io/instance: tidb-operator
+        app.kubernetes.io/name: tidb-operator
+    spec:
+      containers:
+      - command:
+        - /usr/local/bin/tidb-controller-manager
+        - -cluster-permission-node=true
+        - -cluster-permission-pv=true
+        - -cluster-permission-sc=true
+        - -cluster-scoped=false
+        - -auto-failover=true
+        - -pd-failover-period=5m
+        - -tikv-failover-period=5m
+        - -tiflash-failover-period=5m
+        - -tidb-failover-period=5m
+        - -dm-master-failover-period=5m
+        - -dm-worker-failover-period=5m
+        - -v=2
+        - -tidb-discovery-image=${TIDB_DISCOVERY_IMAGE}
+        env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: TZ
+          value: UTC
+        image: ${TIDB_OPERATOR_IMAGE}
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 10
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          tcpSocket:
+            port: 6060
+          timeoutSeconds: 1
+        name: tidb-operator
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 300m
+            memory: 500Mi
+      securityContext:
+        runAsUser: 65534
+      serviceAccountName: controller
