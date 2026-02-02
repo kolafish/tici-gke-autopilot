@@ -4,14 +4,14 @@ provider "google" {
 }
 
 resource "google_project_service" "apis" {
-  for_each = toset([
+  for_each = var.manage_apis ? toset([
     "compute.googleapis.com",
     "container.googleapis.com",
     "iam.googleapis.com",
     "storage.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "serviceusage.googleapis.com",
-  ])
+  ]) : toset([])
   service            = each.key
   disable_on_destroy = false
 }
@@ -25,13 +25,11 @@ resource "google_storage_bucket" "tici" {
   location                    = var.bucket_location
   force_destroy               = true
   uniform_bucket_level_access = true
-  depends_on                  = [google_project_service.apis]
 }
 
 resource "google_service_account" "tici" {
   account_id   = "tici-${random_id.suffix.hex}"
   display_name = "tici-gcs"
-  depends_on   = [google_project_service.apis]
 }
 
 resource "google_storage_bucket_iam_member" "tici_object_admin" {
@@ -42,7 +40,6 @@ resource "google_storage_bucket_iam_member" "tici_object_admin" {
 
 resource "google_storage_hmac_key" "tici" {
   service_account_email = google_service_account.tici.email
-  depends_on            = [google_project_service.apis]
 }
 
 resource "google_container_cluster" "autopilot" {
@@ -60,5 +57,5 @@ resource "google_container_cluster" "autopilot" {
     channel = "REGULAR"
   }
 
-  depends_on = [google_project_service.apis]
+  depends_on = var.manage_apis ? [google_project_service.apis] : []
 }

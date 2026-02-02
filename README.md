@@ -23,6 +23,14 @@ cp config.env.example config.env
 
 `REGION` 请填写 GCP 区域。香港对应 `asia-east2`。
 
+如果你没有启用/查看 API 的权限，可以在 `config.env` 中设置：
+
+```
+MANAGE_APIS=false
+```
+
+并请管理员提前启用 API（serviceusage/iam/compute/container/storage/cloudresourcemanager）。
+
 ### 2) 安装工具（可选）
 ```bash
 ./scripts/00-install-tools.sh
@@ -81,4 +89,3 @@ cp config.env.example config.env
 - `manifests/rendered/`: 渲染输出（已 gitignore）
 - `scripts/`: 一键脚本
 - `docs/`: 原始 PDF 参考
-

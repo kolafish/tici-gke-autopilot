@@ -29,3 +29,9 @@ variable "subnetwork" {
   description = "Subnetwork name"
   default     = "default"
 }
+
+variable "manage_apis" {
+  type        = bool
+  description = "Whether Terraform should enable required GCP APIs"
+  default     = true
+}

@@ -21,6 +21,7 @@ export TF_VAR_cluster_name="$CLUSTER_NAME"
 export TF_VAR_bucket_location="${BUCKET_LOCATION:-$REGION}"
 export TF_VAR_network="${NETWORK:-default}"
 export TF_VAR_subnetwork="${SUBNETWORK:-default}"
+export TF_VAR_manage_apis="${MANAGE_APIS:-true}"
 
 terraform -chdir="$TF_DIR" init
 terraform -chdir="$TF_DIR" apply -auto-approve
