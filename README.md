@@ -96,6 +96,14 @@ gcloud components install gke-gcloud-auth-plugin -q
 ./scripts/40-destroy.sh
 ```
 
+如需**彻底关闭并删除**所有 GKE/GCS/SA/HMAC 资源（防止产生费用），使用：
+
+```bash
+CONFIRM_DESTROY=yes ./scripts/45-shutdown-all.sh
+```
+
+该脚本会执行 Terraform destroy，并用 `gcloud` 做兜底清理（集群、bucket、service account、HMAC），最后删除本地 kubeconfig 里的集群信息。
+
 ## 文件说明
 - `terraform/`: GKE Autopilot + GCS + SA/HMAC
 - `manifests/templates/`: 模板化 YAML
