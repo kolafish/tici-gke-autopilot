@@ -6,7 +6,7 @@ data:
     
     [flash]
     disaggregated_mode = 'tiflash_compute'
-    service_addr = 'tiflash-cn-POD_NUM.tiflash-cn-peer.${NAMESPACE}.svc.cluster.local:3930'
+    service_addr = 'tc-tiflash-0.tc-tiflash-peer.tici-test-tps-8029368-1-982.svc.cluster.local:3930'
     
     [flash.proxy]
     config = '/data0/proxy.toml'
@@ -50,6 +50,8 @@ data:
     local_data_path = '/data0/frag_local_data'
     
     [tici.reader_node]
+    addr = '0.0.0.0:8520'
+    advertise-addr = 'tc-tiflash-0.tc-tiflash-peer.tici-test-tps-8029368-1-982.svc.cluster.local:8520'
     port = 8520
     heartbeat_interval = "0.5s"
     
