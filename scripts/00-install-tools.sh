@@ -68,6 +68,13 @@ else
   echo "[install] gcloud already installed"
 fi
 
+if ! command -v gke-gcloud-auth-plugin >/dev/null 2>&1; then
+  if command -v gcloud >/dev/null 2>&1; then
+    echo "[install] Installing gke-gcloud-auth-plugin..."
+    gcloud components install gke-gcloud-auth-plugin -q || true
+  fi
+fi
+
 if ! command -v kubectl >/dev/null 2>&1; then
   if [[ "$OS" == "darwin"* ]]; then
     install_kubectl_mac

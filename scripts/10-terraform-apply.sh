@@ -27,6 +27,7 @@ terraform -chdir="$TF_DIR" init
 terraform -chdir="$TF_DIR" apply -auto-approve
 
 gcloud config set project "$PROJECT_ID"
+gcloud auth application-default set-quota-project "$PROJECT_ID" >/dev/null 2>&1 || true
 gcloud container clusters get-credentials "$CLUSTER_NAME" --region "$REGION"
 
 kubectl cluster-info

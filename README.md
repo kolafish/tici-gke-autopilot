@@ -41,6 +41,12 @@ MANAGE_APIS=false
 ./scripts/10-terraform-apply.sh
 ```
 
+如果出现 `gke-gcloud-auth-plugin not found`，请执行：
+
+```bash
+gcloud components install gke-gcloud-auth-plugin -q
+```
+
 ### 4) 部署集群
 ```bash
 ./scripts/20-deploy.sh
