@@ -25,6 +25,7 @@ spec:
       disaggregated-tiflash = true
       graceful-wait-before-shutdown = 30
       host = '::'
+      keyspace-name = "${KEYSPACE_NAME}"
       store = 'tikv'
     limits:
       cpu: "1"

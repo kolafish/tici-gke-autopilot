@@ -20,6 +20,8 @@ source "$ROOT_DIR/config.env"
 NAMESPACE=${NAMESPACE:-tidb-fts}
 STORAGE_CLASS=${STORAGE_CLASS:-premium-rwo}
 STORAGE_MODE=${STORAGE_MODE:-gcs}
+KEYSPACE_NAME=${KEYSPACE_NAME:-default}
+SYSTEM_KEYSPACE_NAME=${SYSTEM_KEYSPACE_NAME:-SYSTEM}
 
 # Default replicas (align with terraform-tici locals_common.tf)
 PD_REPLICAS=${PD_REPLICAS:-1}
@@ -82,6 +84,7 @@ S3_USE_PATH_STYLE=$S3_USE_PATH_STYLE
 EOF
 
 export NAMESPACE STORAGE_CLASS STORAGE_MODE
+export KEYSPACE_NAME SYSTEM_KEYSPACE_NAME
 export PD_REPLICAS TIDB_REPLICAS TIDB_WORKER_REPLICAS TIKV_REPLICAS TIKV_WORKER_REPLICAS
 export TIFLASH_CN_REPLICAS TICDC_REPLICAS TICI_META_REPLICAS TICI_WORKER_REPLICAS MINIO_REPLICAS
 export TIDB_BASE_IMAGE TIDB_VERSION TIKV_BASE_IMAGE TIKV_VERSION PD_BASE_IMAGE PD_VERSION
@@ -124,6 +127,16 @@ kubectl apply -n "$NAMESPACE" -f "$ROOT_DIR/manifests/rendered/tiflash-cn-svc.ya
 
 # Core components
 kubectl apply -n "$NAMESPACE" -f "$ROOT_DIR/manifests/rendered/pd.yaml"
+kubectl rollout status -n "$NAMESPACE" statefulset/pd-pd --timeout=15m
+
+PD_POD=$(kubectl get pods -n "$NAMESPACE" -l app.kubernetes.io/component=pd -o jsonpath='{.items[0].metadata.name}')
+if [[ -z "$PD_POD" ]]; then
+  echo "[deploy] Failed to find PD pod in namespace $NAMESPACE" >&2
+  exit 1
+fi
+if ! kubectl exec -n "$NAMESPACE" "$PD_POD" -- /pd-ctl -u http://127.0.0.1:2379 keyspace list | grep -q "\"name\": \"${KEYSPACE_NAME}\""; then
+  kubectl exec -n "$NAMESPACE" "$PD_POD" -- /pd-ctl -u http://127.0.0.1:2379 keyspace create "$KEYSPACE_NAME"
+fi
 kubectl apply -n "$NAMESPACE" -f "$ROOT_DIR/manifests/rendered/tikv.yaml"
 kubectl apply -n "$NAMESPACE" -f "$ROOT_DIR/manifests/rendered/tikv-worker.yaml"
 kubectl apply -n "$NAMESPACE" -f "$ROOT_DIR/manifests/rendered/tidb-worker.yaml"

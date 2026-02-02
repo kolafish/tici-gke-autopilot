@@ -25,6 +25,7 @@ spec:
       graceful-wait-before-shutdown = 30
       host = "::"
       initialize-sql-file = "/etc/tidb-bootstrap/bootstrap.sql"
+      keyspace-name = "${SYSTEM_KEYSPACE_NAME}"
       store = "tikv"
       tikv-worker-url = "http://tikv-worker.${NAMESPACE}.svc.cluster.local:19000"
 

@@ -17,8 +17,12 @@ spec:
     port: 8511
     protocol: TCP
     targetPort: 8511
+  - name: tici-reader
+    port: 8520
+    protocol: TCP
+    targetPort: 8520
   selector:
-    app.kubernetes.io/instance: tiflash-cn
+    app.kubernetes.io/name: tiflash-cn
   sessionAffinity: None
   type: ClusterIP
   clusterIP: None

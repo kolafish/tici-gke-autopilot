@@ -29,6 +29,13 @@ cp config.env.example config.env
 MANAGE_APIS=false
 ```
 
+Nextgen TiDB 需要配置 keyspace，默认：
+
+```
+KEYSPACE_NAME=default
+SYSTEM_KEYSPACE_NAME=SYSTEM
+```
+
 并请管理员提前启用 API（serviceusage/iam/compute/container/storage/cloudresourcemanager）。
 
 ### 2) 安装工具（可选）
