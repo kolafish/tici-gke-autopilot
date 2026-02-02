@@ -16,8 +16,36 @@ ensure_brew() {
   fi
 }
 
+ensure_python() {
+  if command -v python3 >/dev/null 2>&1; then
+    return 0
+  fi
+  if [[ "$OS" == "darwin"* ]]; then
+    ensure_brew
+    brew install python@3.12
+  else
+    echo "[install] python3 not found; please install python3 (>=3.10) manually."
+    exit 1
+  fi
+}
+
+set_cloudsdk_python() {
+  if [[ "$OS" == "darwin"* ]]; then
+    ensure_brew
+    if brew list --versions python@3.12 >/dev/null 2>&1; then
+      export CLOUDSDK_PYTHON="$(brew --prefix python@3.12)/bin/python3"
+    elif brew list --versions python@3.11 >/dev/null 2>&1; then
+      export CLOUDSDK_PYTHON="$(brew --prefix python@3.11)/bin/python3"
+    elif brew list --versions python@3.10 >/dev/null 2>&1; then
+      export CLOUDSDK_PYTHON="$(brew --prefix python@3.10)/bin/python3"
+    fi
+  fi
+}
+
 install_gcloud_mac() {
   ensure_brew
+  ensure_python
+  set_cloudsdk_python
   brew install --cask google-cloud-sdk
 }
 
@@ -67,6 +95,9 @@ if ! command -v gcloud >/dev/null 2>&1; then
 else
   echo "[install] gcloud already installed"
 fi
+
+# Re-run in case gcloud existed but required python binding.
+set_cloudsdk_python
 
 if ! command -v gke-gcloud-auth-plugin >/dev/null 2>&1; then
   if command -v gcloud >/dev/null 2>&1; then
