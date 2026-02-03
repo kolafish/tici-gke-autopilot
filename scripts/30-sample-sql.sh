@@ -11,6 +11,7 @@ fi
 source "$ROOT_DIR/config.env"
 
 NAMESPACE=${NAMESPACE:-tidb-fts}
+SLEEP_AFTER_INSERT=${SLEEP_AFTER_INSERT:-5}
 TABLE_SUFFIX=$(date +"%Y%m%d%H%M%S")
 TABLE_NAME="t1_${TABLE_SUFFIX}"
 SQL_TMP=$(mktemp "${TMPDIR:-/tmp}/tici-sample.XXXXXX.sql")
@@ -40,7 +41,6 @@ render_sql "$ROOT_DIR/scripts/sample-query.sql" "$QUERY_TMP"
 
 echo "[sample-sql] Using table name: $TABLE_NAME"
 print_sql_steps "$SQL_TMP"
-print_sql_steps "$QUERY_TMP"
 
 kubectl cp "$SQL_TMP" "$NAMESPACE/mysql-client-0:/tmp/sample.sql"
 kubectl cp "$QUERY_TMP" "$NAMESPACE/mysql-client-0:/tmp/sample-query.sql"
@@ -54,10 +54,16 @@ done
 
 kubectl exec -n "$NAMESPACE" mysql-client-0 -- sh -c "mysql -h tidb-tidb.$NAMESPACE.svc -P 4000 -u root < /tmp/sample.sql"
 
+echo "[sample-sql] Sleeping ${SLEEP_AFTER_INSERT}s after inserts..."
+sleep "$SLEEP_AFTER_INSERT"
+
+print_sql_steps "$QUERY_TMP"
 query_ok=0
 for _ in {1..30}; do
-  if kubectl exec -n "$NAMESPACE" mysql-client-0 -- sh -c "mysql -h tidb-tidb.$NAMESPACE.svc -P 4000 -u root < /tmp/sample-query.sql"; then
+  query_output=$(kubectl exec -n "$NAMESPACE" mysql-client-0 -- sh -c "mysql -h tidb-tidb.$NAMESPACE.svc -P 4000 -u root < /tmp/sample-query.sql" 2>&1) && query_exit=0 || query_exit=$?
+  if [[ "$query_exit" -eq 0 ]]; then
     query_ok=1
+    printf '%s\n' "$query_output"
     break
   fi
   sleep 5
