@@ -6,6 +6,10 @@ Copy and edit config:
 cp config.env.example config.env
 ```
 
+Change replicas per service (edit `config.env`, then redeploy):
+- `PD_REPLICAS`, `TIDB_REPLICAS`, `TIDB_WORKER_REPLICAS`, `TIKV_REPLICAS`, `TIKV_WORKER_REPLICAS`
+- `TIFLASH_CN_REPLICAS`, `TICDC_REPLICAS`, `TICI_META_REPLICAS`, `TICI_WORKER_REPLICAS`, `MINIO_REPLICAS`
+
 Install tools (optional):
 ```bash
 ./scripts/00-install-tools.sh

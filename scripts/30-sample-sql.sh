@@ -58,20 +58,20 @@ echo "[sample-sql] Sleeping ${SLEEP_AFTER_INSERT}s after inserts..."
 sleep "$SLEEP_AFTER_INSERT"
 
 print_sql_steps "$QUERY_TMP"
-query_ok=0
-for _ in {1..30}; do
-  query_output=$(kubectl exec -n "$NAMESPACE" mysql-client-0 -- sh -c "mysql -h tidb-tidb.$NAMESPACE.svc -P 4000 -u root < /tmp/sample-query.sql" 2>&1) && query_exit=0 || query_exit=$?
-  if [[ "$query_exit" -eq 0 ]]; then
-    query_ok=1
+while true; do
+  query_output=$(kubectl exec -n "$NAMESPACE" mysql-client-0 -- sh -c "mysql -N -B -h tidb-tidb.$NAMESPACE.svc -P 4000 -u root < /tmp/sample-query.sql" 2>&1) && query_exit=0 || query_exit=$?
+  if [[ "$query_exit" -ne 0 ]]; then
+    echo "[sample-sql] Query failed, retrying in 1s..."
+    printf '%s\n' "$query_output" >&2
+    sleep 1
+    continue
+  fi
+  if [[ -n "${query_output}" ]]; then
     printf '%s\n' "$query_output"
     break
   fi
-  sleep 5
+  echo "[sample-sql] Empty result, retrying in 1s..."
+  sleep 1
 done
-
-if [[ "$query_ok" -ne 1 ]]; then
-  echo "[sample-sql] Timed out waiting for TiCI FTS index to be ready." >&2
-  exit 1
-fi
 
 echo "[sample-sql] Executed sample SQL"
