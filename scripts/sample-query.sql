@@ -1,3 +1,3 @@
 USE tici_sample;
 
-SELECT * FROM t1 WHERE fts_match_word('first', body);
+SELECT * FROM __TABLE_NAME__ WHERE fts_match_word('first', body);

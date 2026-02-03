@@ -1,13 +1,13 @@
 CREATE DATABASE IF NOT EXISTS tici_sample;
 USE tici_sample;
 
-CREATE TABLE IF NOT EXISTS t1 (
+CREATE TABLE IF NOT EXISTS __TABLE_NAME__ (
   id CHAR(36) NOT NULL,
   body TEXT,
   PRIMARY KEY (id)
 );
-ALTER TABLE t1 ADD FULLTEXT INDEX ft_index (body) WITH PARSER standard;
-INSERT INTO t1 (id, body) VALUES
+ALTER TABLE __TABLE_NAME__ ADD FULLTEXT INDEX ft_index (body) WITH PARSER standard;
+INSERT INTO __TABLE_NAME__ (id, body) VALUES
   ('00000000-0000-0000-0000-000000000001', 'This is the first test data, used to demonstrate the insert operation'),
   ('00000000-0000-0000-0000-000000000002', 'The second record contains some sample text for testing'),
   ('00000000-0000-0000-0000-000000000003', 'Third entry: verifying the TEXT field''s ability to store longer content'),
