@@ -15,6 +15,14 @@ source "$ROOT_DIR/config.env"
 : "${REGION:?Missing REGION in config.env}"
 : "${CLUSTER_NAME:?Missing CLUSTER_NAME in config.env}"
 
+export TF_VAR_project_id="$PROJECT_ID"
+export TF_VAR_region="$REGION"
+export TF_VAR_cluster_name="$CLUSTER_NAME"
+export TF_VAR_bucket_location="${BUCKET_LOCATION:-$REGION}"
+export TF_VAR_network="${NETWORK:-default}"
+export TF_VAR_subnetwork="${SUBNETWORK:-default}"
+export TF_VAR_manage_apis="${MANAGE_APIS:-true}"
+
 terraform -chdir="$TF_DIR" destroy -auto-approve
 rm -f "$ROOT_DIR/.secrets.env"
 
