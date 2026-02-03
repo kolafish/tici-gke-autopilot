@@ -10,6 +10,21 @@ Change replicas per service (edit `config.env`, then redeploy):
 - `PD_REPLICAS`, `TIDB_REPLICAS`, `TIDB_WORKER_REPLICAS`, `TIKV_REPLICAS`, `TIKV_WORKER_REPLICAS`
 - `TIFLASH_CN_REPLICAS`, `TICDC_REPLICAS`, `TICI_META_REPLICAS`, `TICI_WORKER_REPLICAS`, `MINIO_REPLICAS`
 
+Default images and how to override:
+- Defaults are defined in `scripts/20-deploy.sh` and can be overridden in `config.env`.
+- Common overrides in `config.env`:
+  - `TIDB_BASE_IMAGE` / `TIDB_VERSION`
+  - `TIKV_BASE_IMAGE` / `TIKV_VERSION`
+  - `PD_BASE_IMAGE` / `PD_VERSION`
+  - `TIKV_WORKER_IMAGE`
+  - `TIFLASH_IMAGE`
+  - `TICDC_IMAGE`
+  - `TICI_IMAGE`
+  - `TIDB_OPERATOR_IMAGE` / `TIDB_DISCOVERY_IMAGE`
+  - `BUSYBOX_IMAGE` / `TIDB_HELPER_IMAGE`
+  - `MINIO_IMAGE`
+  - `MYSQL_CLIENT_IMAGE`
+
 Install tools (optional):
 ```bash
 ./scripts/00-install-tools.sh
