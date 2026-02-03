@@ -30,14 +30,27 @@ ensure_python() {
 }
 
 set_cloudsdk_python() {
+  local candidate
+  if [[ -n "${CLOUDSDK_PYTHON:-}" && ! -x "${CLOUDSDK_PYTHON}" ]]; then
+    unset CLOUDSDK_PYTHON
+  fi
   if [[ "$OS" == "darwin"* ]]; then
     ensure_brew
     if brew list --versions python@3.12 >/dev/null 2>&1; then
-      export CLOUDSDK_PYTHON="$(brew --prefix python@3.12)/bin/python3"
+      candidate="$(brew --prefix python@3.12)/bin/python3"
+      if [[ -x "$candidate" ]]; then
+        export CLOUDSDK_PYTHON="$candidate"
+      fi
     elif brew list --versions python@3.11 >/dev/null 2>&1; then
-      export CLOUDSDK_PYTHON="$(brew --prefix python@3.11)/bin/python3"
+      candidate="$(brew --prefix python@3.11)/bin/python3"
+      if [[ -x "$candidate" ]]; then
+        export CLOUDSDK_PYTHON="$candidate"
+      fi
     elif brew list --versions python@3.10 >/dev/null 2>&1; then
-      export CLOUDSDK_PYTHON="$(brew --prefix python@3.10)/bin/python3"
+      candidate="$(brew --prefix python@3.10)/bin/python3"
+      if [[ -x "$candidate" ]]; then
+        export CLOUDSDK_PYTHON="$candidate"
+      fi
     fi
   fi
 }

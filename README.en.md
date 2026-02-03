@@ -1,6 +1,6 @@
 # TiCI on GKE Autopilot
 
-## 主要命令
+## Main Commands
 ```bash
 cp config.env.example config.env
 ./scripts/00-install-tools.sh
@@ -12,4 +12,4 @@ cp config.env.example config.env
 CONFIRM_DESTROY=yes ./scripts/45-shutdown-all.sh
 ```
 
-常用排查命令见 `COMMON_COMMANDS.md`。
+Common troubleshooting commands are in `COMMON_COMMANDS.md`.
