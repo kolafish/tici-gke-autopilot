@@ -51,7 +51,7 @@ data:
     
     [tici.reader_node]
     addr = '0.0.0.0:8520'
-    advertise_addr = 'tiflash-cn-POD_NUM.tiflash-cn-peer.${NAMESPACE}.svc.cluster.local:8520'
+    advertise_addr = 'tiflash-cn-POD_NUM.tiflash-cn-peer.${NAMESPACE}.svc:8520'
     port = 8520
     heartbeat_interval = "0.5s"
     

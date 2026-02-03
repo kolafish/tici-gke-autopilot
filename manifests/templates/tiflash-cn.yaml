@@ -56,6 +56,9 @@ spec:
         - containerPort: 8234
           name: metrics
           protocol: TCP
+        - containerPort: 8520
+          name: tici-reader
+          protocol: TCP
         resources:
           limits:
             cpu: "1"
